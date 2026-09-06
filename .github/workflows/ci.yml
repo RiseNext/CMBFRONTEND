@@ -1,0 +1,114 @@
+# CONTINUOUS INTEGRATION — CMBFRONTEND.
+#
+# Derived from the monorepo workflow (`.github/workflows/ci.yml`, Task 14.7) at
+# the repository split. The commands are unchanged; what changed is that this
+# repository's root IS the frontend, so every `working-directory: frontend` and
+# every `frontend/`-prefixed path is gone. The backend and schema jobs moved to
+# https://github.com/RiseNext/CMBBACKEND.
+#
+# **No deploy job.** Vercel builds from this repository itself; a second build
+# here would be a second source of truth about what shipped.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: "22"
+
+jobs:
+  # ───────────────────────────────────────────────────────────── frontend ────
+  frontend:
+    name: Frontend · typecheck, tests, build, demo exclusion
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      # NOT `--max-warnings=0`. The repository carries a 57-warning baseline and
+      # one known error in `use-auth.tsx`; failing on it would make CI red from
+      # the first run, which is how a team learns to ignore CI. The count is
+      # reported instead, so a regression is visible in the log, and tightening
+      # this is a deliberate follow-up rather than a surprise.
+      - name: Lint (reported, not gated — see comment)
+        run: npm run lint || true
+
+      - name: Tests
+        run: npm test
+
+      - name: Production build
+        run: npm run build
+
+      # ── THE ONE THAT MATTERS MOST ON THIS SIDE ───────────────────────────
+      #
+      # SEC-027: `next build --webpack` once shipped the demo credential and
+      # ~1,500 lines of fabricated customer PII while the build banner printed
+      # `EXCLUDED`. This script builds on BOTH bundlers into clean output and
+      # searches the result for demo-exclusive strings. It is the only gate
+      # that can prove the fixtures are absent rather than merely unreachable.
+      - name: Demo exclusion
+        run: npm run verify:demo-exclusion
+
+  # ────────────────────────────────────────────────── repository hygiene ────
+  hygiene:
+    name: Repository · no committed secrets or build output
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      # Not a secret SCANNER — that is a different tool and a different job.
+      # This catches the specific, cheap mistake: an actual `.env` committed
+      # next to the `.env.example` that invites creating one (SEC-025).
+      #
+      # It matters more here than it looks: every NEXT_PUBLIC_* value is
+      # compiled into the bundle anyway, so the risk this guards is a
+      # NON-public variable being parked in a frontend env file.
+      - name: No .env files are tracked
+        run: |
+          tracked=$(git ls-files | grep -E '(^|/)\.env($|\.)' | grep -v '\.env\.example$' || true)
+          if [ -n "$tracked" ]; then
+            echo "::error::Environment files are tracked:"; echo "$tracked"; exit 1
+          fi
+          echo "No tracked .env files."
+
+      - name: No build output or dependencies are tracked
+        run: |
+          tracked=$(git ls-files | grep -E '(^|/)(node_modules|\.next|out)/' || true)
+          if [ -n "$tracked" ]; then
+            echo "::error::Build output is tracked:"; echo "$tracked" | head -20; exit 1
+          fi
+          echo "No tracked build output."
+
+      # `__pycache__/rewire.cpython-312.pyc` was committed in the original
+      # repository's first commit and survived until Task 0.5. There is no
+      # Python toolchain in this project; this is the enforcement.
+      - name: No compiled Python artefacts are tracked
+        run: |
+          tracked=$(git ls-files | grep -E '(^|/)__pycache__/|\.pyc$' || true)
+          if [ -n "$tracked" ]; then
+            echo "::error::Compiled Python artefacts are tracked (D-009):"; echo "$tracked"; exit 1
+          fi
+          echo "No tracked Python artefacts."

@@ -1,0 +1,68 @@
+# =============================================================================
+# CMBFRONTEND — ignore rules
+# =============================================================================
+#
+# ORDERING IS LOAD-BEARING: within a .gitignore the LAST matching pattern wins,
+# so `!.env.example` must come AFTER `.env.*`.
+#
+# NOTE: `next-env.d.ts` is deliberately NOT ignored. Next.js regenerates it and
+# this project tracks it.
+# =============================================================================
+
+# ------------------------------------------------------------- secrets -----
+#
+# The old rule here covered only `.env*.local`, so a plain `.env` would have
+# been committed. Both are covered now.
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+*.pem
+*.key
+*.p12
+*.pfx
+
+# ---------------------------------------------------------- dependencies ---
+node_modules/
+
+# ---------------------------------------------------------- build output ---
+.next/
+out/
+build/
+*.tsbuildinfo
+next-env.d.ts.bak
+
+# ----------------------------------------------------- python artefacts ----
+#
+# A compiled artefact — `__pycache__/rewire.cpython-312.pyc` — was committed in
+# the original repository's first commit. There is no Python toolchain here;
+# these rules stop a recurrence.
+__pycache__/
+*.py[cod]
+*$py.class
+
+# ---------------------------------------------------------------- logs -----
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ------------------------------------------------------------- coverage ----
+coverage/
+.nyc_output/
+
+# --------------------------------------------------------- editors / os ----
+.DS_Store
+Thumbs.db
+.idea/
+*.swp
+*.swo
+
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# ---------------------------------------------------------- deployment -----
+.vercel

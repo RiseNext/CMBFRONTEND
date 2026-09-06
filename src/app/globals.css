@@ -1,0 +1,224 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --radius: 0.625rem;
+
+  /* Canvas + surfaces */
+  --background: #f4f6fa;
+  --foreground: #0f1c30;
+  --card: #ffffff;
+  --card-foreground: #0f1c30;
+  --popover: #ffffff;
+  --popover-foreground: #0f1c30;
+
+  /* Brand */
+  --primary: #1d4ed8;
+  --primary-foreground: #ffffff;
+  --navy: #0b1f35;
+  --navy-soft: #142c48;
+  --navy-line: #1e3a5c;
+
+  --secondary: #eef2f8;
+  --secondary-foreground: #17304f;
+  --muted: #eff2f7;
+  --muted-foreground: #5c7291;
+  --accent: #e6edfb;
+  --accent-foreground: #14356e;
+
+  /* Status */
+  --success: #0f9d58;
+  --success-soft: #e6f6ee;
+  --warning: #c77700;
+  --warning-soft: #fdf2e0;
+  --danger: #d64545;
+  --danger-soft: #fdecec;
+  --info: #0f7bbd;
+  --info-soft: #e6f2fa;
+  --destructive: #d64545;
+
+  --border: #dfe5ee;
+  --input: #dfe5ee;
+  --ring: #1d4ed8;
+
+  --chart-1: #1d4ed8;
+  --chart-2: #0f9d58;
+  --chart-3: #c77700;
+  --chart-4: #7c3aed;
+  --chart-5: #0f7bbd;
+
+  --sidebar: #0b1f35;
+  --sidebar-foreground: #c7d5e6;
+}
+
+.dark {
+  --background: #0a1524;
+  --foreground: #e7eef7;
+  --card: #101f33;
+  --card-foreground: #e7eef7;
+  --popover: #101f33;
+  --popover-foreground: #e7eef7;
+  --primary: #4f83f1;
+  --primary-foreground: #06101d;
+  --secondary: #17293f;
+  --secondary-foreground: #dbe7f5;
+  --muted: #17293f;
+  --muted-foreground: #93a8c2;
+  --accent: #1a3050;
+  --accent-foreground: #dbe7f5;
+  --border: #21374f;
+  --input: #21374f;
+  --ring: #4f83f1;
+  --success-soft: #10301f;
+  --warning-soft: #33260c;
+  --danger-soft: #35181a;
+  --info-soft: #0d2739;
+
+  /* Status foregrounds are lightened for contrast on dark surfaces; the light
+     values fail WCAG AA against #0a1524. Hues are preserved so a badge reads
+     as the same status in either theme. */
+  --success: #3ecf8e;
+  --warning: #e0a336;
+  --danger: #f2777a;
+  --info: #4aa8e0;
+  --destructive: #f2777a;
+
+  /* The sidebar is intentionally navy in light mode; in dark mode it drops to
+     the page background so it no longer floats above the canvas. */
+  --sidebar: #081120;
+  --sidebar-foreground: #a9bdd4;
+
+  --chart-1: #4f83f1;
+  --chart-2: #3ecf8e;
+  --chart-3: #e0a336;
+  --chart-4: #a78bfa;
+  --chart-5: #4aa8e0;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-navy: var(--navy);
+  --color-navy-soft: var(--navy-soft);
+  --color-navy-line: var(--navy-line);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+  ::selection {
+    background-color: color-mix(in oklab, var(--primary) 20%, transparent);
+  }
+}
+
+@layer utilities {
+  .numeric {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+  .eyebrow {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .card-shadow {
+    box-shadow:
+      0 1px 2px rgba(15, 28, 48, 0.04),
+      0 8px 24px -12px rgba(15, 28, 48, 0.12);
+  }
+  /* Shadows tuned for a light canvas disappear on a dark one; a hairline ring
+     restores the card edge instead. */
+  .dark .card-shadow {
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.04),
+      0 8px 24px -12px rgba(0, 0, 0, 0.6);
+  }
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: color-mix(in oklab, var(--muted-foreground) 30%, transparent);
+    border-radius: 999px;
+  }
+  .grid-rail {
+    background-image: linear-gradient(
+      to bottom,
+      color-mix(in oklab, var(--primary) 40%, transparent),
+      transparent
+    );
+  }
+}
+
+@keyframes rn-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-fade-up {
+  animation: rn-fade-up 0.35s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
