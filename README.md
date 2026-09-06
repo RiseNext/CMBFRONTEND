@@ -71,6 +71,42 @@ NEXT_PUBLIC_API_URL="http://localhost:8080"
 
 Origin **only** — `src/lib/api.ts` appends `/api` itself.
 
+### ⚠️ Regenerating `package-lock.json` — read this first
+
+**Generate it with the same npm the CI runner uses: npm 10.9.x, on Linux.**
+
+`.github/workflows/ci.yml` pins `node-version: 22`, and `actions/setup-node@v4`
+ships **npm 10.9.4** with it. A lockfile written by a *newer* npm on Windows is
+not interchangeable, and the failure is not obvious:
+
+    npm error `npm ci` can only install packages when your package.json and
+    npm error package-lock.json are in sync.
+    npm error Missing: @emnapi/runtime@1.11.3 from lock file
+    npm error Missing: @emnapi/core@1.11.3 from lock file
+
+Nothing is actually out of sync. `@emnapi/*` are dependencies of the
+`*-wasm32-wasi` optional packages of `@tailwindcss/oxide` and `@unrs/resolver`,
+and the two disagree on purpose — oxide wants `^1.11.1`, the resolver pins
+`1.10.0`. npm **skips the subtree of an optional dependency whose `cpu` does not
+match the host**, so on an x64 machine it can decline to resolve the wasm32
+branch and simply never record `@emnapi/core@1.11.3`. Whether it does depends on
+the npm version, so the lockfile a Windows npm 11 writes is missing entries the
+runner's npm 10.9 demands. `npm ci` passes locally and fails in CI.
+
+This is not theoretical: it is exactly how CI run #1 failed, and it is the whole
+reason `npm ci` is a gate rather than `npm install`.
+
+If you have Docker or WSL:
+
+```bash
+# generate against the runner's platform and npm
+docker run --rm -v "$PWD":/w -w /w node:22-alpine npm install --package-lock-only
+```
+
+Then commit the lockfile and let CI confirm it. **Do not "fix" a red `npm ci` by
+relaxing the step to `npm install`** — that removes the only check that the
+lockfile is installable at all.
+
 ### npm scripts
 
 | Script | Does |
