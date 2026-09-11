@@ -13,6 +13,8 @@ import {
   sheetDateShort,
   sheetDateTime,
   sheetTime,
+  sheetTitleBand,
+  sheetWeekday,
 } from "./formats";
 import { buildFvrCsv, buildSheetCsv } from "./export";
 import type { FvrRow, SheetRow } from "./types";
@@ -93,6 +95,7 @@ const row = (overrides: Partial<SheetRow> = {}): SheetRow => ({
   id: "d1",
   code: "DSB-5001",
   date: "2026-07-01T06:30:00.000Z",
+  loanId: "l1",
   customerId: "c1",
   customerName: "Yata mahesh",
   customerMobile: "9848000000",
@@ -431,5 +434,33 @@ describe("E · absent data stays absent", () => {
     const line = FVR_PARTICULARS.find((p) => p.key === "zensifyRmSignature")!;
     expect(line.value(signed)).toBe("A. Kumar");
     expect(line.value(signed)).not.toMatch(/signed|✓|true/i);
+  });
+});
+
+/* ══ F — the Payment sheet's title band ════════════════════════════════════ */
+
+describe("F · the title band reproduces the Payment sheet's heading line", () => {
+  it("29b. it matches the screenshot's shape, irregular spacing included", () => {
+    // Image 5 heads its sheet: `29-08-2026 (Saturday) / APTS /HYDERABAD ( RAMUDU )`
+    const band = sheetTitleBand({
+      date: "2026-08-29T06:00:00.000Z",
+      sheet: "APTS",
+      area: "HYDERABAD",
+      manager: "RAMUDU",
+    });
+    expect(band).toMatch(/^\d{2}-\d{2}-\d{4} \([A-Za-z]+\) \/ APTS \/HYDERABAD \( RAMUDU \)$/);
+  });
+
+  it("30b. each segment appears ONLY when that filter is set", () => {
+    // A band naming an area nobody chose would be a caption asserting something
+    // untrue, so absent filters produce absent segments.
+    expect(sheetTitleBand({ sheet: "Payment" })).toBe("Payment");
+    expect(sheetTitleBand({ sheet: "Payment", area: "HYDERABAD" })).toBe("Payment /HYDERABAD");
+    expect(sheetTitleBand({ sheet: "Payment", manager: "RAMUDU" })).toBe("Payment ( RAMUDU )");
+  });
+
+  it("31b. a weekday is rendered for a real date and blank for nothing", () => {
+    expect(sheetWeekday("2026-08-29T06:00:00.000Z")).toMatch(/^[A-Za-z]+$/);
+    expect(sheetWeekday(null)).toBe("");
   });
 });

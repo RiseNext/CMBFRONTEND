@@ -135,7 +135,7 @@ export default function MaintenanceFvrPage() {
       </SectionCard>
 
       {selected ? (
-        <FvrChecklist row={selected} editable={editable} refresh={refresh} />
+        <FvrChecklist key={selected.id} row={selected} editable={editable} refresh={refresh} />
       ) : null}
     </>
   );
@@ -305,7 +305,15 @@ function escapeHtml(value: string): string {
  *  and customer profile are authoritative CRM data and are edited where they
  *  live, not here (instruction §23, §26). */
 function FvrEditor({ row, onDone }: { row: FvrRow; onDone: () => void }) {
+  const { can } = useAuth();
+  /** `Customer Profile` writes `customers.occupation` — the customer record, not
+   *  this verification — so the control appears only for a role that may edit
+   *  customers. The backend enforces the same rule; this only avoids offering a
+   *  field that would be refused. */
+  const canEditCustomer = can("customers.edit");
+
   const [form, setForm] = React.useState({
+    customerProfile: row.customerProfile ?? BLANK,
     fvrDate: row.fvrDate ? row.fvrDate.slice(0, 10) : "",
     takeoverFromLender: row.takeoverFromLender ?? BLANK,
     fvrDoneByName: row.fvrDoneByName ?? BLANK,
@@ -331,6 +339,9 @@ function FvrEditor({ row, onDone }: { row: FvrRow; onDone: () => void }) {
     setSaving(true);
     try {
       await api.update(`/maintenance/fvr/${row.id}`, {
+        // Omitted entirely when the role may not edit customers, so the request
+        // carries no field the server would refuse.
+        ...(canEditCustomer ? { customerProfile: orNull(form.customerProfile) } : {}),
         fvrDate: form.fvrDate ? new Date(form.fvrDate).toISOString() : null,
         takeoverFromLender: orNull(form.takeoverFromLender),
         fvrDoneByName: orNull(form.fvrDoneByName),
@@ -371,6 +382,18 @@ function FvrEditor({ row, onDone }: { row: FvrRow; onDone: () => void }) {
           onChange={(event) => set({ takeoverFromLender: event.target.value })}
         />
       </Field>
+      {canEditCustomer ? (
+        <Field label="Customer Profile (Occupation / Business / Employment)">
+          <Input
+            value={form.customerProfile}
+            onChange={(event) => set({ customerProfile: event.target.value })}
+          />
+          {/* Said plainly: this one edits the customer, not the checklist. */}
+          <p className="text-[11px] text-[var(--muted-foreground)]">
+            Saved on the customer record, not on this checklist.
+          </p>
+        </Field>
+      ) : null}
       <Field label="FVR Done By (Name)">
         <Input
           value={form.fvrDoneByName}

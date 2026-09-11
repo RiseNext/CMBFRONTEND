@@ -84,6 +84,35 @@ export function sheetTime(value: string | null | undefined): string {
   return `${at("hour")}:${at("minute")} ${at("dayPeriod").toUpperCase().replace(/\./g, "")}`;
 }
 
+/** `Saturday` — used by the Payment sheet's title band. */
+export function sheetWeekday(value: string | null | undefined): string {
+  if (!value) return BLANK;
+  const at = parts(value, { weekday: "long" });
+  return at ? at("weekday") : BLANK;
+}
+
+/**
+ * The Payment sheet's title band, e.g.
+ * `29-08-2026 (Saturday) / APTS /HYDERABAD ( RAMUDU )`.
+ *
+ * Reproduced from the screenshot including its irregular spacing — no space
+ * after the second slash, spaces inside the parentheses. Each segment is
+ * emitted ONLY when that filter is actually set: a band naming an area the
+ * operator never chose would be a caption asserting something untrue.
+ */
+export function sheetTitleBand(input: {
+  date?: string | null;
+  sheet: string;
+  area?: string | null;
+  manager?: string | null;
+}): string {
+  const day = sheetDate(input.date);
+  const weekday = sheetWeekday(input.date);
+  const head = day ? `${day}${weekday ? ` (${weekday})` : ""} / ${input.sheet}` : input.sheet;
+  const withArea = input.area ? `${head} /${input.area}` : head;
+  return input.manager ? `${withArea} ( ${input.manager} )` : withArea;
+}
+
 /** `01-08-2026 (10:50 AM)` — the APTS sheet's Fund Credited format. */
 export function sheetDateTime(value: string | null | undefined): string {
   if (!value) return BLANK;

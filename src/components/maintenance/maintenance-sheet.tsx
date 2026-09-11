@@ -27,9 +27,15 @@ import { useAuth } from "@/hooks/use-auth";
 import { useMaintenanceSheet } from "@/hooks/use-maintenance-sheet";
 import { errorMessage } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import { cellText, sheetAmount, type MaintenanceFormat } from "@/lib/maintenance/formats";
+import {
+  cellText,
+  sheetAmount,
+  sheetTitleBand,
+  type MaintenanceFormat,
+} from "@/lib/maintenance/formats";
 import { exportSheetCsv, totalsRecord } from "@/lib/maintenance/export";
 import type { Area, Branch, Region, SheetRow } from "@/lib/maintenance/types";
+import type { Employee } from "@/lib/types";
 import { useResource } from "@/hooks/use-api";
 
 /**
@@ -65,6 +71,7 @@ export function MaintenanceSheet<Row extends SheetRow>({
   const [regionId, setRegionId] = React.useState("All");
   const [areaId, setAreaId] = React.useState("All");
   const [branchId, setBranchId] = React.useState("All");
+  const [managerId, setManagerId] = React.useState("All");
   const [search, setSearch] = React.useState("");
   const [page, setPage] = React.useState(1);
   const [exporting, setExporting] = React.useState(false);
@@ -79,11 +86,12 @@ export function MaintenanceSheet<Row extends SheetRow>({
       regionId: regionId === "All" ? undefined : regionId,
       areaId: areaId === "All" ? undefined : areaId,
       branchId: branchId === "All" ? undefined : branchId,
+      assignedUserId: managerId === "All" ? undefined : managerId,
       search: search.trim() || undefined,
       page,
       pageSize,
     }),
-    [from, to, regionId, areaId, branchId, search, page],
+    [from, to, regionId, areaId, branchId, managerId, search, page],
   );
 
   const { rows, summary, meta, loading, error, refresh, fetchAll } = useMaintenanceSheet<Row>(
@@ -103,6 +111,13 @@ export function MaintenanceSheet<Row extends SheetRow>({
     "/maintenance/branches",
     areaId === "All" ? undefined : { areaId },
     allowed,
+  );
+  // The Manager filter — §25. Backed by `assignedUserId` on the API, which the
+  // sheets already resolve MANAGER NAME through.
+  const { data: employees } = useResource<Employee>(
+    "/users",
+    { pageSize: 200 },
+    allowed && can("users.view"),
   );
 
   /*
@@ -150,6 +165,17 @@ export function MaintenanceSheet<Row extends SheetRow>({
   const totals = format.hasTotals ? totalsRecord(format, rows) : null;
   const totalPages = meta?.totalPages ?? 1;
 
+  const band = sheetTitleBand({
+    // The band's date is the range's start — the manager's sheets cover one day.
+    date: from ? new Date(from).toISOString() : null,
+    sheet: format.title,
+    area: areaId === "All" ? null : (areas.find((a) => a.id === areaId)?.name ?? null),
+    manager: managerId === "All" ? null : (employees.find((e) => e.id === managerId)?.name ?? null),
+  });
+  // `sheetTitleBand` always returns at least the sheet name; show it only once a
+  // filter gives it something to say.
+  const hasBandContext = Boolean(from) || areaId !== "All" || managerId !== "All";
+
   return (
     <>
       <PageHeader eyebrow={eyebrow} title={format.title} description={description} />
@@ -169,6 +195,7 @@ export function MaintenanceSheet<Row extends SheetRow>({
                 setRegionId("All");
                 setAreaId("All");
                 setBranchId("All");
+                setManagerId("All");
                 setSearch("");
               })
             }
@@ -261,6 +288,25 @@ export function MaintenanceSheet<Row extends SheetRow>({
           </Select>
         </div>
         <div className="space-y-1.5">
+          <Label>Manager</Label>
+          <Select
+            value={managerId}
+            onValueChange={(value) => changeFilter(() => setManagerId(value))}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All">All managers</SelectItem>
+              {employees.map((item) => (
+                <SelectItem key={item.id} value={item.id}>
+                  {item.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
           <Label htmlFor={`${format.slug}-search`}>Search</Label>
           <Input
             id={`${format.slug}-search`}
@@ -289,6 +335,19 @@ export function MaintenanceSheet<Row extends SheetRow>({
           * rendering the table straight through would show "No records" for a
           * 403 or a 500 and blame the reader for it (D-004 / U-4).
           */}
+        {/*
+          * THE TITLE BAND — reproduced from the Payment screenshot, which heads
+          * its sheet `29-08-2026 (Saturday) / APTS /HYDERABAD ( RAMUDU )`.
+          *
+          * Built from the filters that are ACTUALLY SET. A band naming a date,
+          * an area or a manager the operator never chose would be a caption
+          * asserting something untrue, so each segment appears only when its
+          * filter does, and the band is absent entirely when none is set.
+          */}
+        {hasBandContext && band ? (
+          <p className="pb-3 text-center text-sm font-semibold text-[var(--primary)]">{band}</p>
+        ) : null}
+
         {loading ? (
           <p className="py-8 text-center text-sm text-[var(--muted-foreground)]">Loading…</p>
         ) : error ? (

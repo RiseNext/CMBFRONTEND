@@ -39,7 +39,7 @@ export default function MaintenancePaymentPage() {
       eyebrow="Maintenance"
       description="Transfers with the manager's receipt status. Select a row to record it."
       path="/maintenance/payment"
-      renderDrawer={(row, done) => <PaymentMaintenance row={row} done={done} />}
+      renderDrawer={(row, done) => <PaymentMaintenance key={row.id} row={row} done={done} />}
     />
   );
 }
@@ -65,7 +65,7 @@ function PaymentMaintenance({ row, done }: { row: PaymentRow; done: () => void }
   async function save() {
     setSaving(true);
     try {
-      await api.update(`/maintenance/payment/${row.id}`, {
+      await api.update(`/maintenance/disbursement/${row.id}`, {
         paymentStatus: value === UNRECORDED ? null : value,
       });
       toast.success("Payment status saved");

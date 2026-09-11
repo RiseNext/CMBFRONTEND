@@ -24,6 +24,8 @@ export interface SheetRow {
   code: string;
   /** `coalesce(disbursed_on, created_at)` — the sheets' `DATE` / `Date`. */
   date: Timestamp;
+  /** The file this payment belongs to — `BRANCH` and `BT LEAD ID` live there. */
+  loanId: string;
   customerId: string;
   customerName: string | null;
   customerMobile: string | null;
