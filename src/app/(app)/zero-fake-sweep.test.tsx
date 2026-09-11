@@ -392,6 +392,13 @@ import DocumentsPage from "./documents/page";
 import EmployeesPage from "./employees/page";
 import LedgerPage from "./ledger/page";
 import LoansPage from "./loans/page";
+// Manager Maintenance — D-095. Static imports, like every other entry here:
+// `vi.mock` hoists above the imports and a dynamic `import()` inside a case
+// would resolve after the mocks were reset.
+import MaintenanceAptsPage from "./maintenance/apts/page";
+import MaintenanceFvrPage from "./maintenance/fvr/page";
+import MaintenancePaymentPage from "./maintenance/payment/page";
+import MaintenanceTransferPage from "./maintenance/transfer/page";
 import MyWorkPage from "./my-work/page";
 import NotificationsPage from "./notifications/page";
 import RecycleBinPage from "./recycle-bin/page";
@@ -414,6 +421,10 @@ const PAGES: [string, () => React.JSX.Element][] = [
   ["/employees", EmployeesPage],
   ["/ledger", LedgerPage],
   ["/loans", LoansPage],
+  ["/maintenance/apts", MaintenanceAptsPage],
+  ["/maintenance/fvr", MaintenanceFvrPage],
+  ["/maintenance/payment", MaintenancePaymentPage],
+  ["/maintenance/transfer", MaintenanceTransferPage],
   ["/my-work", MyWorkPage],
   ["/notifications", NotificationsPage],
   ["/recycle-bin", RecycleBinPage],

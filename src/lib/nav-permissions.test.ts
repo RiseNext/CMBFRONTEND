@@ -69,6 +69,10 @@ const SUPER_ADMIN = [
   "ledger.view",
   "documents.view",
   "reports.view",
+  // Manager Maintenance — D-095. Super Admin holds `*`, so it holds all three.
+  "maintenance.view",
+  "maintenance.edit",
+  "maintenance.manage_locations",
   "audit_logs.view",
   "recycle_bin.view",
   "settings.view",
@@ -92,6 +96,10 @@ const ADMIN = [
   "ledger.view",
   "documents.view",
   "reports.view",
+  // Admin holds the whole maintenance group, master data included — D-095.
+  "maintenance.view",
+  "maintenance.edit",
+  "maintenance.manage_locations",
   "users.view",
   "roles.view",
   "audit_logs.view",
@@ -117,6 +125,13 @@ const MANAGER = [
   "ledger.create",
   "documents.view",
   "reports.view",
+  /*
+   * These are the Manager's own tracking sheets — D-095. View and edit, but NOT
+   * `maintenance.manage_locations`: renaming a branch re-labels every historical
+   * sheet that resolves through it, so master data stays with Admin.
+   */
+  "maintenance.view",
+  "maintenance.edit",
   "recycle_bin.view",
 ];
 

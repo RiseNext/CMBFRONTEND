@@ -1,11 +1,15 @@
 import {
+  ArrowLeftRight,
   Banknote,
   Bell,
   Building2,
+  ClipboardCheck,
+  FileSpreadsheet,
   FileStack,
   FileText,
   Gauge,
   HandCoins,
+  IndianRupee,
   Landmark,
   ListChecks,
   Receipt,
@@ -108,6 +112,33 @@ export const navSections: NavSection[] = [
       { label: "Reports", href: "/reports", icon: Landmark, permission: "reports.view" },
       { label: "Banks", href: "/banks", icon: Building2, permission: "banks.view" },
       { label: "Employees", href: "/employees", icon: Users, permission: "users.view" },
+    ],
+  },
+  {
+    /*
+     * MANAGER MAINTENANCE — Task MM-1, D-095.
+     *
+     * The four tracking formats management already works in, in the order they
+     * were supplied. A section of its own, and not entries folded into
+     * "Records", because these are operational sheets a manager MAINTAINS
+     * rather than reports they read.
+     *
+     * All four are gated on `maintenance.view`, which Super Admin, Admin and
+     * Manager hold. Hiding a link is not security — every one of these routes is
+     * enforced by `requirePermission` on the API, and each screen renders its
+     * own refusal for anyone who arrives by typing the URL.
+     */
+    title: "Maintenance",
+    items: [
+      { label: "FVR", href: "/maintenance/fvr", icon: ClipboardCheck, permission: "maintenance.view" },
+      {
+        label: "Transfer / Disbursement",
+        href: "/maintenance/transfer",
+        icon: ArrowLeftRight,
+        permission: "maintenance.view",
+      },
+      { label: "APTS", href: "/maintenance/apts", icon: FileSpreadsheet, permission: "maintenance.view" },
+      { label: "Payment", href: "/maintenance/payment", icon: IndianRupee, permission: "maintenance.view" },
     ],
   },
   {
